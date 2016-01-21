@@ -4,8 +4,6 @@ namespace App;
 
 use App\DBQueryInterface;
 
-//require __DIR__  . '\DBQueryInterface.php';
-
 Class DBQuery implements DBQueryInterface
 {
     private $timeBefore;

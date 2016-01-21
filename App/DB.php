@@ -4,15 +4,13 @@ namespace App;
 
 use App\DBConnectionInterface;
 
-//require __DIR__  . '\DBConnectionInterface.php';
-
 Class DB implements DBConnectionInterface
 {
     private static $instance = null;
 
     private $pdo = null;
 
-    private $userPdo = array();
+    private static $userPdo = array();
 
     private $dsn = null;
 
@@ -31,11 +29,11 @@ Class DB implements DBConnectionInterface
      */
     private function __construct($dsn, $username = '', $password = '')
     {
-        if (isset($this->userPdo[$dsn."-".$username])) {
-            $this->pdo = $this->userPdo[$dsn."-".$username];
+        if (isset(self::$userPdo[$dsn."-".$username])) {
+            $this->pdo = self::$userPdo[$dsn."-".$username];
         } else {
-            $this->pdo = new \PDO($dsn, $username, $password);
-            $this->userPdo[$dsn."-".$username] = $this->pdo;
+            $this->pdo = new PDO($dsn, $username, $password);
+            self::$userPdo[$dsn."-".$username] = $this->pdo;
         }		
         $this->dsn = $dsn;
         $this->username = $username;
@@ -72,8 +70,8 @@ Class DB implements DBConnectionInterface
     public function reconnect()
     {
         $this->pdo = null;        
-        $this->pdo = new \PDO($this->dsn, $this->username, $this->password);
-        $this->userPdo[$this->dsn."-".$this->username] = $this->pdo;        
+        $this->pdo = new PDO($this->dsn, $this->username, $this->password);
+        self::$userPdo[$this->dsn."-".$this->username] = $this->pdo;        
     }
 
     /**
