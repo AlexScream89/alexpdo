@@ -44,21 +44,7 @@ Class DBQuery implements DBQueryInterface
     public function setDBConnection(DBConnectionInterface $DBConnection)
     {
         $this->connect = $DBConnection;
-    }
-
-    /**
-     * @param $query
-     * @param null $params
-     * @return mixed
-     */
-    public function queryMain($query, $params = null)
-	{
-		$this->timeBefore = microtime(true);
-        $sth = $this->connect->getPdoInstance()->prepare($query);       
-        $sth->execute($params);
-		$this->timeAfter = microtime(true);
-		return $sth;	
-	}
+    }    
 
     /**
      * Executes the SQL statement and returns query result.
@@ -70,8 +56,11 @@ Class DBQuery implements DBQueryInterface
      */
     public function query($query, $params = null)
     {
-		$sth = $this->queryMain($query, $params);	
-        return $sth->fetch();
+		$this->timeBefore = microtime(true);
+        $sth = $this->connect->getPdoInstance()->prepare($query);       
+        $sth->execute($params);
+		$this->timeAfter = microtime(true);
+		return $sth;
     }
 
     /**
@@ -84,8 +73,8 @@ Class DBQuery implements DBQueryInterface
      */
     public function queryAll($query, array $params = null)
     {
-		$sth = $this->queryMain($query, $params);				
-        return $sth->fetchAll();
+		$sth = $this->query($query, $params);				
+        return $sth->fetchAll(\PDO::FETCH_ASSOC);
     }
 
     /**
@@ -98,8 +87,8 @@ Class DBQuery implements DBQueryInterface
      */
     public function queryRow($query, array $params = null)
     {
-		$sth = $this->queryMain($query, $params);	
-        return $sth->fetch();
+		$sth = $this->query($query, $params);	
+        return $sth->fetch(\PDO::FETCH_ASSOC);
     }
 
     /**
@@ -112,7 +101,7 @@ Class DBQuery implements DBQueryInterface
      */
     public function queryColumn($query, array $params = null)
     {
-		$sth = $this->queryMain($query, $params);		
+		$sth = $this->query($query, $params);		
         return $sth->fetchAll(\PDO::FETCH_COLUMN, 0);
     }
 
@@ -126,7 +115,7 @@ Class DBQuery implements DBQueryInterface
      */
     public function queryScalar($query, array $params = null)
     {
-        $sth = $this->queryMain($query, $params);
+        $sth = $this->query($query, $params);
 		return $sth->fetchColumn(0);	
     }
 
@@ -142,7 +131,7 @@ Class DBQuery implements DBQueryInterface
      */
     public function execute($query, array $params = null)
     {
-        $sth = $this->queryMain($query, $params);
+        $sth = $this->query($query, $params);
         return $sth->rowCount();
     }
 
@@ -158,4 +147,3 @@ Class DBQuery implements DBQueryInterface
     }
 
 }
-

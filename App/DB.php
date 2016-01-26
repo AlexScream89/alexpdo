@@ -6,11 +6,9 @@ use App\DBConnectionInterface;
 
 Class DB implements DBConnectionInterface
 {
-    private static $instance = null;
+    private static $instances = array();
 
-    private $pdo = null;
-
-    private static $userPdo = array();
+    private $pdo = null;   
 
     private $dsn = null;
 
@@ -29,12 +27,8 @@ Class DB implements DBConnectionInterface
      */
     private function __construct($dsn, $username = '', $password = '')
     {
-        if (isset(self::$userPdo[$dsn."-".$username])) {
-            $this->pdo = self::$userPdo[$dsn."-".$username];
-        } else {
-            $this->pdo = new PDO($dsn, $username, $password);
-            self::$userPdo[$dsn."-".$username] = $this->pdo;
-        }		
+        $this->pdo = new \PDO($dsn, $username, $password);
+		self::$instances[$dsn."-".$username] = $this->pdo;
         $this->dsn = $dsn;
         $this->username = $username;
         $this->password = $password;
@@ -57,9 +51,11 @@ Class DB implements DBConnectionInterface
      * @return $this DB
      */
     public static function connect($dsn, $username = '', $password = '')
-    {       
-        self::$instance = new self($dsn, $username, $password);        
-        return self::$instance;
+    {
+        if (!isset(self::$instances[$dsn."-".$username])) {
+             self::$instances[$dsn."-".$username] = new self($dsn, $username, $password);			 
+        }
+        return self::$instances[$dsn."-".$username];
     }
 
     /**
@@ -69,9 +65,8 @@ Class DB implements DBConnectionInterface
      */
     public function reconnect()
     {
-        $this->pdo = null;        
-        $this->pdo = new PDO($this->dsn, $this->username, $this->password);
-        self::$userPdo[$this->dsn."-".$this->username] = $this->pdo;        
+        $this->pdo = null;
+        $this->pdo = new \PDO($this->dsn, $this->username, $this->password);        
     }
 
     /**
@@ -82,7 +77,7 @@ Class DB implements DBConnectionInterface
     public function getPdoInstance()
     {
         if ($this->pdo === null && $this->dsn) {
-           self::connect($this->dsn, $this->username, $this->password);
+            self::connect($this->dsn, $this->username, $this->password);
         }
         return $this->pdo;
     }
@@ -137,16 +132,15 @@ Class DB implements DBConnectionInterface
     public function getAttribute($attribute)
     {
         $this->pdo->getAttribute($attribute);
-    }	
-	
+    }    
+
     /**
      * Closes the currently active DB connection.
      *
      * @return void
      */
-	public function __destruct()
-	{
-		$this->close();	
-	}
+    public function __destruct()
+    {
+        $this->close();
+    }
 }
-
